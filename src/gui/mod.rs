@@ -37,14 +37,18 @@ pub struct GuiContext {
 
 impl GuiContext {
     pub fn initialize() {
-        let sig = skidscan::signature!("66 0F 7F 0D ? ? ? ? 66 0F 7F 05 ? ? ? ? 0F 1F 40");
+        //                             "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 54 41 56 41 57 48 81 EC ? ? ? ? 4C 8B A4 24 ? ? ? ?" 
+        let sig = skidscan::signature!("48 89 ? 24 ? 48 89 ? 24 ? ? ? ? ? EC 20 41 8B ?");
 
         unsafe {
-            let swap_chain = **(memory::resolve_relative_address(
-                sig.scan_module("rendersystemdx11.dll").unwrap() as *mut c_void,
-                0x4,
-                0x8,
-            ) as *mut *mut *mut ISwapChainDx11);
+            let present_ptr = memory::relative_rip(
+                sig.scan_module("GameOverlayRenderer64.dll")
+                    .unwrap()
+                    .add(0xAD) as *mut c_void,
+                6,
+            );
+
+            let original_present_fn = *(present_ptr as *mut PresentFn);
         }
     }
 }
