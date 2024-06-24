@@ -1,9 +1,11 @@
+pub mod gui;
 pub mod offsets;
 pub mod sdk;
 pub mod utils;
 
 use std::{thread, time::Duration};
 
+use gui::GuiContext;
 use sdk::interfaces::{
     engine_client::CEngineClient, game_resource_service::IGameResourceService, CaptureInterface,
 };
@@ -27,7 +29,7 @@ use crate::sdk::{
         cs_player_controller::CCSPlayerController,
         cs_player_pawn::CCSPlayerPawn,
     },
-    interfaces::game_entity_system::CGameEntitySystem,
+    interfaces::game_entity_system::{CGameEntitySystem, WrappedCGameEntitySystem},
 };
 
 unsafe fn init() {
@@ -73,22 +75,22 @@ unsafe fn init() {
             panic!("AAA FAILED GAME RESOURCE SERVICE");
         };
 
+        println!("Hay");
+        GuiContext::initialize();
+        println!("Hay 2");
+
+        let entity_system =
+            WrappedCGameEntitySystem::init(resource_service.read().game_entity_system);
+
         loop {
             std::thread::sleep(Duration::from_millis(100));
 
             if let Ok(in_game) = CEngineClient::get_is_in_game(cengine_client) {
                 if in_game {
-                    let entity_system = resource_service.read().game_entity_system;
 
-                    let highest_index = CGameEntitySystem::get_highest_entity_index(entity_system);
-
-                    println!("{highest_index}");
+                    //println!("{highest_index}");
                     for i in 1..64 {
-                        let Some(entity) = CGameEntitySystem::get_entity_by_index(entity_system, i)
-                        else {
-                            println!("Couldn't get entity by index");
-                            continue;
-                        };
+                        let entity = entity_system.get_entity_by_index(i);
 
                         if entity.is_null() || !entity.is_aligned() {
                             continue;
@@ -99,12 +101,7 @@ unsafe fn init() {
                         let pawn_handle = ccs_player_controller.get_pawn_handle();
 
                         let ccs_player_pawn =
-                            CGameEntitySystem::get_entity_by_handle(entity_system, pawn_handle);
-
-                        let Some(ccs_player_pawn) = ccs_player_pawn else {
-                            println!("Couldn't get entity by handle");
-                            continue;
-                        };
+                            entity_system.get_entity_by_handle(pawn_handle);
 
                         let ccs_player_pawn = CCSPlayerPawn(ccs_player_pawn);
                         let health = ccs_player_pawn.get_health();

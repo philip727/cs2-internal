@@ -1,6 +1,7 @@
 pub mod engine_client;
 pub mod game_entity_system;
 pub mod game_resource_service;
+pub mod swap_chain_dx11;
 
 use anyhow::anyhow;
 use std::ffi::{c_char, c_void, CString};

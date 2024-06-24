@@ -1,4 +1,5 @@
 pub mod module;
+pub mod memory;
 
 // used for horizon zero dawn, maybe useful idk
 pub fn add_offsets_to_addr(base_addr: usize, offsets: &[usize]) -> usize {
