@@ -17,6 +17,8 @@ use crate::{sdk::interfaces::swap_chain_dx11::ISwapChainDx11, utils::memory};
 type PresentFn =
     extern "stdcall" fn(this: *mut IDXGISwapChain, sync_interval: u32, flags: u32) -> HRESULT;
 
+static mut ORIGINAL_PRESENT: Option<PresentFn> = None;
+
 pub struct GuiContext {
     pub open: bool,
     pub setup: bool,
@@ -35,20 +37,35 @@ pub struct GuiContext {
     pub original_presenet: *mut PresentFn,
 }
 
+extern "stdcall" fn my_present(
+    this: *mut IDXGISwapChain,
+    sync_interval: u32,
+    flags: u32,
+) -> HRESULT {
+    unsafe {
+        let Some(original_present) = ORIGINAL_PRESENT else {
+            return HRESULT(1);
+        };
+
+        return original_present(this, sync_interval, flags);
+    }
+}
+
 impl GuiContext {
     pub fn initialize() {
-        //                             "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 54 41 56 41 57 48 81 EC ? ? ? ? 4C 8B A4 24 ? ? ? ?" 
+        //                             "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 54 41 56 41 57 48 81 EC ? ? ? ? 4C 8B A4 24 ? ? ? ?"
         let sig = skidscan::signature!("48 89 ? 24 ? 48 89 ? 24 ? ? ? ? ? EC 20 41 8B ?");
 
         unsafe {
-            let present_ptr = memory::relative_rip(
+            let present_ptr =memory::relative_rip(
                 sig.scan_module("GameOverlayRenderer64.dll")
                     .unwrap()
                     .add(0xAD) as *mut c_void,
                 6,
             );
 
-            let original_present_fn = *(present_ptr as *mut PresentFn);
+            ORIGINAL_PRESENT = Some(std::mem::transmute(present_ptr));
+            //std::ptr::write(present_ptr as *mut PresentFn, my_present);
         }
     }
 }
