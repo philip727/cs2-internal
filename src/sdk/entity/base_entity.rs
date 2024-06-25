@@ -1,8 +1,11 @@
 use std::ffi::c_void;
 
-use crate::offsets;
+use crate::{offsets, utils::memory::dereference_addr};
 
-use super::cs_player_controller::CCSPlayerController;
+use super::{
+    cs_player_controller::CCSPlayerController,
+    data_types::{collision_property::CCollisionProperty, game_scene_node::CGameSceneNode},
+};
 
 #[derive(Clone, Copy)]
 pub struct CBaseEntity(pub *mut c_void);
@@ -34,6 +37,26 @@ pub trait CBaseEntitySchema {
                 .raw()
                 .add(offsets::client_dll::C_BaseEntity::m_iMaxHealth) as *const i32)
                 .read()
+        }
+    }
+
+    fn get_collision_property(&self) -> *mut c_void {
+        unsafe {
+            dereference_addr(
+                self.raw()
+                    .add(offsets::client_dll::C_BaseEntity::m_pCollision)
+                    as *mut usize,
+            )
+        }
+    }
+
+    fn get_game_scene_node(&self) -> *mut CGameSceneNode {
+        unsafe {
+            dereference_addr(
+                self.raw()
+                    .add(offsets::client_dll::C_BaseEntity::m_pGameSceneNode)
+                    as *mut usize,
+            ) as *mut CGameSceneNode
         }
     }
 }

@@ -4,12 +4,12 @@ pub mod game_resource_service;
 pub mod swap_chain_dx11;
 
 use anyhow::anyhow;
-use std::ffi::{c_char, c_void, CString};
+use std::ffi::{c_char, CString};
 
 use crate::utils::module::Module;
 
 
-type CreateInterfaceFn = extern "C" fn(name: *const c_char, rc: *mut i32) -> *mut c_void;
+type CreateInterfaceFn = extern "C" fn(name: *const c_char, rc: *mut i32) -> *mut usize;
 
 pub fn get_factory(module: &Module) -> Option<CreateInterfaceFn> {
     module.get_function_addr("CreateInterface").map(|fn_addr| unsafe {
@@ -17,7 +17,7 @@ pub fn get_factory(module: &Module) -> Option<CreateInterfaceFn> {
     })
 }
 
-pub fn create_interface(factory: CreateInterfaceFn, version: &str) -> Option<*mut c_void> {
+pub fn create_interface(factory: CreateInterfaceFn, version: &str) -> Option<*mut usize> {
     let c_version = CString::new(version).unwrap();
     let interface = factory(c_version.as_ptr(), std::ptr::null_mut());
     if !interface.is_null() {

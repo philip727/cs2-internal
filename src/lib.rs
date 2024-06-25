@@ -5,26 +5,29 @@ pub mod sdk;
 pub mod utils;
 
 use std::{
+    ffi::c_void,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
 };
 
 use config::ConfigContext;
-use sdk::interfaces::{
-    engine_client::CEngineClient, game_resource_service::IGameResourceService, CaptureInterface,
+use sdk::{
+    entity::data_types::{collision_property::CCollisionProperty, game_scene_node::CGameSceneNode},
+    interfaces::{
+        engine_client::CEngineClient, game_resource_service::IGameResourceService, CaptureInterface,
+    },
 };
 use utils::module::Module;
 use windows::{
     core::PCSTR,
     Win32::{
-        Foundation::{BOOL, HMODULE, HWND},
+        Foundation::{BOOL, HMODULE},
         System::{
             Console::{AllocConsole, FreeConsole},
             LibraryLoader::GetModuleHandleA,
             SystemServices::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH},
         },
-        UI::WindowsAndMessaging::{MessageBoxA, MB_OK},
     },
 };
 
@@ -129,13 +132,35 @@ unsafe fn init() {
                         let max_health = ccs_player_pawn.get_max_health();
                         let is_alive = ccs_player_controller.is_alive();
 
+                        let collision =
+                            ccs_player_pawn.get_collision_property() as *mut CCollisionProperty;
+                        if collision.is_null() {
+                            println!("player has no collision property");
+                            continue;
+                        };
+
+                        let collision = CCollisionProperty(collision);
+
+                        let scene_node = ccs_player_pawn.get_game_scene_node();
+                        if scene_node.is_null() {
+                            println!("player has no collision property");
+                            continue;
+                        };
+
+                        let scene_node = CGameSceneNode(scene_node);
+
+                        let transform = scene_node.node_to_world();
+                        let pos = transform.vec_position;
+
+                        let vec_mins = collision.get_vec_mins();
+                        let vec_maxs = collision.get_vec_maxs();
                         //let Ok(player_name) = ccs_player_controller.sanitized_player_name() else {
                         //    continue;
                         //};
 
                         if config_context.print_values {
                             println!(
-                                "({entity:p}) | alv: {is_alive} | health: {health}/{max_health}"
+                                "({entity:p}) | alv: {is_alive} | health: {health}/{max_health} | origin: ({pos:?}) "
                             );
                         }
                     }
