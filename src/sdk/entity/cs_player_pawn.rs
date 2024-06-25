@@ -1,6 +1,5 @@
 use std::ffi::c_void;
 
-use crate::offsets;
 
 use super::base_entity::CBaseEntitySchema;
 

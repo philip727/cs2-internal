@@ -1,8 +1,8 @@
-use std::ffi::{c_char, c_void, CStr};
+use std::ffi::{c_void, CStr};
 
 use crate::offsets;
 
-use super::{cs_player_pawn::CCSPlayerPawn, entity_handle::CBaseHandle};
+use super::{entity_handle::CBaseHandle};
 
 pub struct CCSPlayerController(pub *mut c_void);
 

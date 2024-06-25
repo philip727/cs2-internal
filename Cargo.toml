@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 anyhow = "1.0.86"
-imgui-dx11-renderer = "0.8.0"
+hudhook = { version = "0.7.0", features = ["dx11"] }
 minhook = "=0.5.0"
 pelite = "0.10.0"
 skidscan = "2.0.1"
@@ -28,6 +28,8 @@ features= [
     "Win32_UI_WindowsAndMessaging",
     "Win32_System_ProcessStatus",
     "Win32_Graphics_Gdi",
+    "Win32_Graphics_Direct3D",
     "Win32_Graphics_Direct3D11",
-    "Win32_Graphics_Dxgi"
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common"
 ]
