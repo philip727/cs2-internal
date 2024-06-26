@@ -5,6 +5,7 @@ use crate::offsets;
 use super::{transform::CTransform, vector::Vector3D};
 
 #[derive(Clone, Copy)]
+#[repr(C)]
 pub struct CGameSceneNode(pub *mut Self);
 
 impl CGameSceneNode {
@@ -13,18 +14,17 @@ impl CGameSceneNode {
             (self
                 .0
                 .add(offsets::client_dll::CGameSceneNode::m_nodeToWorld)
-                as *const CTransform)
-                .read()
+                as *mut CTransform)
+                .read_unaligned()
         }
     }
 
     pub fn get_abs_origin(&self) -> Vector3D {
         unsafe {
-            (self
+            *(self
                 .0
                 .add(offsets::client_dll::CGameSceneNode::m_vecAbsOrigin)
-                as *const Vector3D)
-                .read()
+                as *mut Vector3D)
         }
     }
 }

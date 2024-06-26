@@ -1,6 +1,10 @@
-use std::ffi::{c_void, CStr};
+use std::{
+    borrow::Cow,
+    ffi::{c_void, CStr},
+    slice::from_raw_parts,
+};
 
-use crate::offsets;
+use crate::{offsets, utils::memory::dereference_addr};
 
 use super::entity_handle::CBaseHandle;
 
@@ -27,14 +31,16 @@ impl CCSPlayerController {
         }
     }
 
-    pub fn sanitized_player_name(&self) -> anyhow::Result<&str> {
-        unsafe {
-            let chars = self
-                .0
-                .add(offsets::client_dll::CCSPlayerController::m_sSanitizedPlayerName)
-                as *const i8;
-
-            Ok(CStr::from_ptr(chars).to_str()?)
+    pub unsafe fn sanitized_player_name(&self) -> String {
+        let chars = {
+            dereference_addr(
+                self.0
+                    .add(offsets::client_dll::CCSPlayerController::m_sSanitizedPlayerName)
+                    as *mut c_void,
+            ) as *mut [u8; 128]
         }
+        .read();
+
+        String::from_utf8_lossy(&chars).split("\0").next().unwrap_or("").to_string()
     }
 }

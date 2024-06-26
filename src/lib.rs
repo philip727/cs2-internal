@@ -5,15 +5,18 @@ pub mod sdk;
 pub mod utils;
 
 use std::{
-    ffi::c_void,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
 };
 
 use config::ConfigContext;
+use overlay::esp::ESPContext;
 use sdk::{
-    entity::data_types::{collision_property::CCollisionProperty, game_scene_node::CGameSceneNode},
+    entity::data_types::{
+        collision_property::CCollisionProperty, game_scene_node::CGameSceneNode,
+        view_matrix::ViewMatrix4x4,
+    },
     interfaces::{
         engine_client::CEngineClient, game_resource_service::IGameResourceService, CaptureInterface,
     },
@@ -47,7 +50,6 @@ unsafe fn init() {
         let Ok(client_module) = client else {
             panic!("Unable to client module handle");
         };
-
         let engine = GetModuleHandleA(PCSTR("engine2.dll\x00".as_ptr()));
 
         let Ok(engine_module) = engine else {
@@ -55,6 +57,8 @@ unsafe fn init() {
         };
 
         let config_ctx = Arc::new(Mutex::new(ConfigContext::default()));
+        let esp_ctx = Arc::new(Mutex::new(ESPContext::default()));
+
         let client_module = Module::new(client_module).unwrap();
         let engine_module = Module::new(engine_module).unwrap();
         let Ok(cengine_client) = CEngineClient::capture(&engine_module, "Source2EngineToClient001")
@@ -64,35 +68,6 @@ unsafe fn init() {
 
         let resource_service =
             IGameResourceService::capture(&engine_module, "GameResourceServiceClientV001");
-        //let swap_chain_sig =
-        //    skidscan::signature!("66 0F 7F 0D ? ? ? ? 66 0F 7F 05 ? ? ? ? 0F 1F 40");
-        //rendersystemdx11.dll
-        //println!("Hay");
-        //let swap_chain = **(std::mem::transmute::<_, *mut *mut *mut ISwapChainDx11>(
-        //    memory::resolve_relative_address(
-        //        swap_chain_sig.scan_module("rendersystemdx11.dll").unwrap() as *mut c_void,
-        //        0x4,
-        //        0x8,
-        //    ),
-        //));
-
-        //println!("Hay 2");
-        //let idxgi_swap_chain = (*swap_chain).swap_chain;
-
-        //if idxgi_swap_chain.is_null() {
-        //    panic!("NULL SWAP CHAIN AAA");
-        //}
-
-        //println!("Hay 3 {idxgi_swap_chain:p}");
-        //let device = idxgi_swap_chain.read().GetDevice::<ID3D11Device>();
-        //println!("Hay 4");
-
-        //println!("{device:?}");
-
-        ////let idxgi_swap_chain = (**swap_chain).swap_chain;
-        //println!("sc 2");
-
-        //println!("Hay 5");
 
         if let Err(e) = resource_service {
             panic!("{e}");
@@ -105,16 +80,30 @@ unsafe fn init() {
         let entity_system =
             WrappedCGameEntitySystem::init(resource_service.read().game_entity_system);
 
-        overlay::create_overlay(&config_ctx);
+        overlay::create_overlay(Arc::clone(&config_ctx), Arc::clone(&esp_ctx));
+
+        //let esp_context_clone = esp_ctx.clone();
+        //thread::spawn(move || {
+        //    let esp_ctx  = esp_context_clone.lock().unwrap();
+        //});
 
         loop {
             std::thread::sleep(Duration::from_millis(100));
+
             let config_context = { config_ctx.lock().unwrap() };
+            let mut esp_context = { esp_ctx.lock().unwrap() };
 
             if let Ok(in_game) = CEngineClient::get_is_in_game(cengine_client) {
+                esp_context.entries.clear();
+
+                let view_matrix = ((client_module.base_addr() + offsets::client_dll::dwViewMatrix)
+                    as *mut ViewMatrix4x4)
+                    .read();
+
+                esp_context.view_matrix = Some(view_matrix);
+
                 if in_game {
-                    //println!("{highest_index}");
-                    for i in 1..64 {
+                    for i in 1..32 {
                         let entity = entity_system.get_entity_by_index(i);
 
                         if entity.is_null() || !entity.is_aligned() {
@@ -123,17 +112,27 @@ unsafe fn init() {
 
                         let c_base_entity = CBaseEntity(entity);
                         let ccs_player_controller: CCSPlayerController = c_base_entity.into();
+
+
                         let pawn_handle = ccs_player_controller.get_pawn_handle();
 
                         let ccs_player_pawn = entity_system.get_entity_by_handle(pawn_handle);
 
                         let ccs_player_pawn = CCSPlayerPawn(ccs_player_pawn);
+                        let pos = ccs_player_pawn.get_old_origin();
+
                         let health = ccs_player_pawn.get_health();
                         let max_health = ccs_player_pawn.get_max_health();
                         let is_alive = ccs_player_controller.is_alive();
 
-                        let collision =
-                            ccs_player_pawn.get_collision_property() as *mut CCollisionProperty;
+                        if is_alive && health > 0 {
+                            let name = ccs_player_controller.sanitized_player_name();
+                            let esp_entry = esp_context.create_esp_entry(&pos, name);
+                            esp_context.entries.push(esp_entry);
+                        }
+
+                        let collision = ccs_player_pawn.get_collision_property();
+
                         if collision.is_null() {
                             println!("player has no collision property");
                             continue;
@@ -149,18 +148,9 @@ unsafe fn init() {
 
                         let scene_node = CGameSceneNode(scene_node);
 
-                        let transform = scene_node.node_to_world();
-                        let pos = transform.vec_position;
-
-                        let vec_mins = collision.get_vec_mins();
-                        let vec_maxs = collision.get_vec_maxs();
-                        //let Ok(player_name) = ccs_player_controller.sanitized_player_name() else {
-                        //    continue;
-                        //};
-
                         if config_context.print_values {
                             println!(
-                                "({entity:p}) | alv: {is_alive} | health: {health}/{max_health} | origin: ({pos:?}) "
+                                "(| alv: {is_alive} | health: {health}/{max_health} | origin: ({pos:?}) "
                             );
                         }
                     }

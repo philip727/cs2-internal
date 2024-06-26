@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct Quaternion {
     pub x: f32,
@@ -7,8 +7,8 @@ pub struct Quaternion {
     pub w: f32,
 }
 
-#[derive(Debug)]
-#[repr(align(16), C)]
+#[derive(Debug, Clone, Copy)]
+#[repr(align(16))]
 pub struct QuaternionAligned {
     pub x: f32,
     pub y: f32,

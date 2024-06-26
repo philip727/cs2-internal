@@ -3,3 +3,4 @@ pub mod vector;
 pub mod game_scene_node;
 pub mod transform;
 pub mod quaternion;
+pub mod view_matrix;

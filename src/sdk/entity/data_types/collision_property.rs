@@ -5,6 +5,7 @@ use crate::offsets;
 use super::vector::Vector3D;
 
 #[derive(Clone, Copy)]
+#[repr(C)]
 pub struct CCollisionProperty(pub *mut Self);
 
 impl CCollisionProperty {

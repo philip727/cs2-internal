@@ -40,13 +40,12 @@ pub trait CBaseEntitySchema {
         }
     }
 
-    fn get_collision_property(&self) -> *mut c_void {
+    fn get_collision_property(&self) -> *mut CCollisionProperty {
         unsafe {
             dereference_addr(
                 self.raw()
-                    .add(offsets::client_dll::C_BaseEntity::m_pCollision)
-                    as *mut usize,
-            )
+                    .add(offsets::client_dll::C_BaseEntity::m_pCollision),
+            ) as *mut CCollisionProperty
         }
     }
 
@@ -54,8 +53,7 @@ pub trait CBaseEntitySchema {
         unsafe {
             dereference_addr(
                 self.raw()
-                    .add(offsets::client_dll::C_BaseEntity::m_pGameSceneNode)
-                    as *mut usize,
+                    .add(offsets::client_dll::C_BaseEntity::m_pGameSceneNode),
             ) as *mut CGameSceneNode
         }
     }

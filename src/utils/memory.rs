@@ -29,6 +29,6 @@ pub unsafe fn relative_rip(address: *mut c_void, instruction: i32) -> *mut c_voi
         .wrapping_add(offset as usize)
 }
 
-pub unsafe fn dereference_addr(src: *mut usize) -> *mut c_void {
-    std::mem::transmute::<usize, *mut c_void>(*src)
+pub unsafe fn dereference_addr(src: *mut c_void) -> *mut c_void {
+    std::mem::transmute::<usize, *mut c_void>(*(src as *mut usize))
 }

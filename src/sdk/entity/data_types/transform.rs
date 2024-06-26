@@ -1,7 +1,8 @@
 use super::{quaternion::QuaternionAligned, vector::VectorAligned3D};
 
-#[repr(align(16), C)]
+#[derive(Clone, Copy)]
+#[repr(C, align(16))]
 pub struct CTransform {
-    pub vec_position: VectorAligned3D,
-    pub quaternion: QuaternionAligned,
+    pub position: VectorAligned3D,
+    pub orientation: QuaternionAligned,
 }
