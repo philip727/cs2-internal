@@ -8,6 +8,10 @@ pub struct WrappedCGameEntitySystem {
     get_base_entity_fn: GetBaseEntityFn,
 }
 
+unsafe impl Send for WrappedCGameEntitySystem {}
+unsafe impl Sync for WrappedCGameEntitySystem {}
+
+
 impl WrappedCGameEntitySystem {
     pub fn init(game_entity_system: *mut CGameEntitySystem) -> Self {
         unsafe {

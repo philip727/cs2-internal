@@ -23,6 +23,10 @@ impl ImguiRenderLoop for OverlayRenderLoop {
 
         if let Some(view_matrix) = &esp_context.view_matrix {
             for entry in esp_context.entries.iter() {
+                let Some(entry) = entry else {
+                    continue;
+                };
+
                 let Some(origin_screen_pos) = entry.origin_pos.world_to_screen(&view_matrix, ui)
                 else {
                     continue;
@@ -39,6 +43,7 @@ impl ImguiRenderLoop for OverlayRenderLoop {
                 //
                 let drawlist = ui.get_background_draw_list();
 
+                // Bounding Box
                 drawlist
                     .add_rect(
                         [head_screen_pos.x - width, head_screen_pos.y],
@@ -47,11 +52,26 @@ impl ImguiRenderLoop for OverlayRenderLoop {
                     )
                     .build();
 
+                // Health bar
+                drawlist
+                    .add_rect(
+                        [head_screen_pos.x - width - 4f32, head_screen_pos.y],
+                        [head_screen_pos.x - width - 2f32, origin_screen_pos.y],
+                        ImColor32::BLACK,
+                    )
+                    .filled(true)
+                    .build();
+
+                let [text_width, _] = ui.calc_text_size(&entry.name);
+
                 drawlist.add_text(
-                    [head_screen_pos.x, head_screen_pos.y - 20f32],
+                    [
+                        head_screen_pos.x - (text_width / 2f32),
+                        head_screen_pos.y - 20f32,
+                    ],
                     ImColor32::WHITE,
                     &entry.name,
-                )
+                );
             }
         }
 

@@ -2,7 +2,7 @@
 pub const dwLocalPlayerPawn: usize = 0x181A9B8;
 pub const dwEntityList: usize = 0x19B49B8;
 pub const dwLocalPlayerController: usize = 0x1A04768;
-pub const dwViewMatrix: usize = 0x1A1ED00;
+pub const dwViewMatrix: usize = 0x1A20DC0;
 
 pub mod C_BaseEntity {
     pub const m_iHealth: usize = 0x324; // int32
