@@ -1,14 +1,16 @@
-use std::{
-    borrow::Cow,
-    ffi::{c_void, CStr},
-    slice::from_raw_parts,
-};
+use std::ffi::c_void;
 
 use crate::{offsets, utils::memory::dereference_addr};
 
-use super::entity_handle::CBaseHandle;
+use super::{base_entity::CBaseEntitySchema, entity_handle::CBaseHandle};
 
 pub struct CCSPlayerController(pub *mut c_void);
+
+impl CBaseEntitySchema for CCSPlayerController {
+    fn raw(&self) -> *mut c_void {
+        self.0
+    }
+}
 
 impl CCSPlayerController {
     pub fn is_alive(&self) -> bool {
@@ -41,6 +43,10 @@ impl CCSPlayerController {
         }
         .read();
 
-        String::from_utf8_lossy(&chars).split("\0").next().unwrap_or("").to_string()
+        String::from_utf8_lossy(&chars)
+            .split("\0")
+            .next()
+            .unwrap_or("")
+            .to_string()
     }
 }

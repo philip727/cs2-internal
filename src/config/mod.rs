@@ -1,11 +1,11 @@
 pub struct ConfigContext {
-    pub print_values: bool,
+    pub esp_enabled: bool,
 }
 
 impl Default for ConfigContext {
     fn default() -> Self {
         Self {
-            print_values: false,
+            esp_enabled: false,
         }
     }
 }

@@ -1,8 +1,6 @@
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, unused)]
-pub const dwLocalPlayerPawn: usize = 0x181A9B8;
-pub const dwEntityList: usize = 0x19B49B8;
-pub const dwLocalPlayerController: usize = 0x1A04768;
-pub const dwViewMatrix: usize = 0x1A20DC0;
+pub const dwLocalPlayerController: usize = 0x1A0DA88;
+pub const dwViewMatrix: usize = 0x1A1FDB0;
 
 pub mod C_BaseEntity {
     pub const m_iHealth: usize = 0x324; // int32
@@ -10,6 +8,7 @@ pub mod C_BaseEntity {
     pub const m_fFlags: usize = 0x3CC; // uint32
     pub const m_pCollision: usize = 0x318; // CCollisionProperty*
     pub const m_pGameSceneNode: usize = 0x308; // CGameSceneNode*
+    pub const m_iTeamNum: usize = 0x3C3; // uint8
 }
 
 pub mod C_BasePlayerPawn {

@@ -57,4 +57,13 @@ pub trait CBaseEntitySchema {
             ) as *mut CGameSceneNode
         }
     }
+
+    fn get_team(&self) -> u8 {
+        unsafe {
+            (self
+                .raw()
+                .add(offsets::client_dll::C_BaseEntity::m_iTeamNum) as *const u8)
+                .read()
+        }
+    }
 }

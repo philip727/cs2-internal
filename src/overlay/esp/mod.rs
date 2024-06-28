@@ -1,19 +1,25 @@
-use std::sync::{Arc, Mutex, RwLock};
+use std::os::raw::c_void;
 
-use crate::sdk::{
-    entity::{
-        base_entity::{CBaseEntity, CBaseEntitySchema},
-        cs_player_controller::CCSPlayerController,
-        cs_player_pawn::CCSPlayerPawn,
-        data_types::{
-            vector::{Vector3D, WorldToScreen},
-            view_matrix::ViewMatrix4x4,
+use hudhook::imgui::{DrawListMut, ImColor32};
+
+use crate::{
+    config::ConfigContext,
+    offsets,
+    sdk::{
+        entity::{
+            base_entity::{CBaseEntity, CBaseEntitySchema},
+            cs_player_controller::CCSPlayerController,
+            cs_player_pawn::CCSPlayerPawn,
+            data_types::{
+                vector::{Vector2D, Vector3D},
+                view_matrix::ViewMatrix4x4,
+            },
+        },
+        interfaces::{
+            engine_client::WrappedCEngineClient, game_entity_system::WrappedCGameEntitySystem,
         },
     },
-    interfaces::{
-        engine_client::{CEngineClient, WrappedCEngineClient},
-        game_entity_system::WrappedCGameEntitySystem,
-    },
+    utils::module::Module,
 };
 
 pub struct ESPContext {
@@ -32,13 +38,24 @@ impl Default for ESPContext {
 }
 
 impl ESPContext {
+    pub fn empty_entries(&mut self) {
+        for entry in self.entries.iter_mut() {
+            *entry = None;
+        }
+    }
+
     pub unsafe fn run_update(
         &mut self,
         entity_system: &WrappedCGameEntitySystem,
-        engine_client: &WrappedCEngineClient,
+        client_dll: &Module,
     ) {
-        if !engine_client.in_game() {
-            return;
+        let local_player_addr = *((client_dll.base_addr()
+            + offsets::client_dll::dwLocalPlayerController)
+            as *mut *mut c_void);
+
+        let mut local_player_controller: Option<CCSPlayerController> = None;
+        if local_player_addr.is_aligned() && !local_player_addr.is_null() {
+            local_player_controller = Some(CCSPlayerController(local_player_addr));
         }
 
         for i in 1..32 {
@@ -50,6 +67,14 @@ impl ESPContext {
             };
 
             let entity_base = CBaseEntity(entity);
+
+            if let Some(local_player_controller) = &local_player_controller {
+                if entity_base.get_team() == local_player_controller.get_team() {
+                    self.entries[i as usize] = None;
+                    continue;
+                }
+            }
+
             let player_controller: CCSPlayerController = entity_base.into();
 
             if !player_controller.is_alive() {
@@ -77,11 +102,81 @@ impl ESPContext {
                 origin_pos: pos,
                 head_pos,
                 name: String::from("dummy"),
-                health: (health, max_health)
+                health: (health, max_health),
             };
 
             self.entries[i as usize] = Some(esp_entry);
         }
+    }
+
+    pub fn create_bounding_box(
+        drawlist: &DrawListMut,
+        head_screen_pos: &Vector2D,
+        origin_screen_pos: &Vector2D,
+    ) {
+        let height = origin_screen_pos.y - head_screen_pos.y;
+        let width = height * 0.3f32;
+
+        // Box Border
+        drawlist
+            .add_rect(
+                [head_screen_pos.x - width, head_screen_pos.y],
+                [head_screen_pos.x + width, origin_screen_pos.y],
+                ImColor32::BLACK,
+            )
+            .thickness(3f32)
+            .build();
+
+        // Box
+        drawlist
+            .add_rect(
+                [head_screen_pos.x - width, head_screen_pos.y],
+                [head_screen_pos.x + width, origin_screen_pos.y],
+                ImColor32::WHITE,
+            )
+            .build();
+    }
+
+    pub fn create_health_bar(
+        drawlist: &DrawListMut,
+        head_screen_pos: &Vector2D,
+        origin_screen_pos: &Vector2D,
+        health: &(i32, i32),
+    ) {
+        let height = origin_screen_pos.y - head_screen_pos.y;
+        let width = height * 0.3f32;
+
+        let bar_top = head_screen_pos.y - 1f32;
+        let bar_bottom = origin_screen_pos.y + 1f32;
+        // Health bar outline
+        drawlist
+            .add_rect(
+                [head_screen_pos.x - width - 5f32, bar_top],
+                [head_screen_pos.x - width - 2f32, bar_bottom],
+                ImColor32::BLACK,
+            )
+            .filled(true)
+            .build();
+
+        // Full bar height
+        let bar_height = (bar_bottom - bar_top) - 2f32;
+
+        // health / max = perc
+        let health_percentage = health.0 as f32 / health.1 as f32;
+        let bar_height = bar_height * health_percentage;
+
+        // Health bar fill
+        drawlist
+            .add_rect(
+                [
+                    head_screen_pos.x - width - 4f32,
+                    origin_screen_pos.y - bar_height,
+                ],
+                [head_screen_pos.x - width - 3f32, origin_screen_pos.y],
+                ImColor32::from_rgb(0, 255, 0),
+            )
+            .filled(true)
+            .build();
     }
 }
 
