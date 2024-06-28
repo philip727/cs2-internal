@@ -48,22 +48,51 @@ impl ImguiRenderLoop for OverlayRenderLoop {
                     .add_rect(
                         [head_screen_pos.x - width, head_screen_pos.y],
                         [head_screen_pos.x + width, origin_screen_pos.y],
+                        ImColor32::BLACK,
+                    )
+                    .thickness(3f32)
+                    .build();
+
+                drawlist
+                    .add_rect(
+                        [head_screen_pos.x - width, head_screen_pos.y],
+                        [head_screen_pos.x + width, origin_screen_pos.y],
                         ImColor32::WHITE,
                     )
                     .build();
 
-                // Health bar
+                let bar_top = head_screen_pos.y - 1f32;
+                let bar_bottom = origin_screen_pos.y + 1f32;
+                // Health bar outline
                 drawlist
                     .add_rect(
-                        [head_screen_pos.x - width - 4f32, head_screen_pos.y],
-                        [head_screen_pos.x - width - 2f32, origin_screen_pos.y],
+                        [head_screen_pos.x - width - 5f32, bar_top],
+                        [head_screen_pos.x - width - 2f32, bar_bottom],
                         ImColor32::BLACK,
                     )
                     .filled(true)
                     .build();
 
-                let [text_width, _] = ui.calc_text_size(&entry.name);
+                // full bar height
+                let bar_height = (bar_bottom - bar_top) - 2f32;
+                // health / max = perc
+                let health_percentage = entry.health.0 as f32 / entry.health.1 as f32;
+                let bar_height = bar_height * health_percentage;
 
+                // Health bar fill
+                drawlist
+                    .add_rect(
+                        [
+                            head_screen_pos.x - width - 4f32,
+                            origin_screen_pos.y - bar_height,
+                        ],
+                        [head_screen_pos.x - width - 3f32, origin_screen_pos.y],
+                        ImColor32::from_rgb(0, 255, 0),
+                    )
+                    .filled(true)
+                    .build();
+
+                let [text_width, _] = ui.calc_text_size(&entry.name);
                 drawlist.add_text(
                     [
                         head_screen_pos.x - (text_width / 2f32),

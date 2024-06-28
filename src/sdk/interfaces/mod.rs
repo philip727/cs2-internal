@@ -4,6 +4,7 @@ pub mod game_resource_service;
 pub mod swap_chain_dx11;
 
 use anyhow::anyhow;
+use xorstring::xorstring;
 use std::ffi::{c_char, CString};
 
 use crate::utils::module::Module;

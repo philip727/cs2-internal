@@ -1,5 +1,7 @@
 use std::ffi::c_void;
 
+use xorstring::xorstring;
+
 use crate::sdk::entity::entity_identity::GetEntryIndex;
 pub type GetBaseEntityFn = extern "thiscall" fn(*mut c_void, i32) -> *mut c_void;
 

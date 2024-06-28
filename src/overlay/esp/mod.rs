@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use crate::sdk::{
     entity::{
-        base_entity::CBaseEntity,
+        base_entity::{CBaseEntity, CBaseEntitySchema},
         cs_player_controller::CCSPlayerController,
         cs_player_pawn::CCSPlayerPawn,
         data_types::{
@@ -32,20 +32,6 @@ impl Default for ESPContext {
 }
 
 impl ESPContext {
-    pub fn create_esp_entry(&mut self, origin: &Vector3D, player_name: String) -> ESPPlayerEntry {
-        let head_pos = Vector3D {
-            x: origin.x,
-            y: origin.y,
-            z: origin.z + 75f32,
-        };
-
-        ESPPlayerEntry {
-            origin_pos: *origin,
-            head_pos,
-            name: player_name,
-        }
-    }
-
     pub unsafe fn run_update(
         &mut self,
         entity_system: &WrappedCGameEntitySystem,
@@ -74,9 +60,26 @@ impl ESPContext {
             //let name = player_controller.sanitized_player_name();
             let pawn_handle = player_controller.get_pawn_handle();
             let player_pawn = CCSPlayerPawn(entity_system.get_entity_by_handle(pawn_handle));
-            let pos = player_pawn.get_old_origin();
+            let mut pos = player_pawn.get_old_origin();
+            let health = player_pawn.get_health();
+            let max_health = player_pawn.get_max_health();
 
-            let esp_entry = self.create_esp_entry(&pos, String::from("dummy"));
+            let head_pos = Vector3D {
+                x: pos.x,
+                y: pos.y,
+                z: pos.z + 75f32,
+            };
+
+            // just offset a lil bit
+            pos.z -= 5f32;
+
+            let esp_entry = ESPPlayerEntry {
+                origin_pos: pos,
+                head_pos,
+                name: String::from("dummy"),
+                health: (health, max_health)
+            };
+
             self.entries[i as usize] = Some(esp_entry);
         }
     }
@@ -87,4 +90,5 @@ pub struct ESPPlayerEntry {
     pub origin_pos: Vector3D,
     pub head_pos: Vector3D,
     pub name: String,
+    pub health: (i32, i32),
 }
