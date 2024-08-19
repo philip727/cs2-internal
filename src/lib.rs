@@ -13,7 +13,7 @@ use std::{
 use config::ConfigContext;
 use overlay::esp::ESPContext;
 use sdk::{
-    entity::data_types::view_matrix::ViewMatrix4x4,
+    data_types::view_matrix::ViewMatrix4x4,
     interfaces::{
         engine_client::{CEngineClient, WrappedCEngineClient},
         game_resource_service::IGameResourceService,

@@ -2,9 +2,9 @@ use std::ffi::c_void;
 
 use crate::{offsets, utils::memory::dereference_addr};
 
-use super::{
-    cs_player_controller::CCSPlayerController,
-    data_types::{collision_property::CCollisionProperty, game_scene_node::CGameSceneNode},
+use super::cs_player_controller::CCSPlayerController;
+use crate::sdk::data_types::{
+    collision_property::CCollisionProperty, game_scene_node::CGameSceneNode,
 };
 
 #[derive(Clone, Copy)]

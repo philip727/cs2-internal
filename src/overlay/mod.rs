@@ -6,7 +6,7 @@ use hudhook::{
     ImguiRenderLoop,
 };
 
-use crate::{config::ConfigContext, sdk::entity::data_types::vector::WorldToScreen};
+use crate::{config::ConfigContext, sdk::data_types::vector::WorldToScreen};
 
 use self::esp::ESPContext;
 pub mod esp;

@@ -6,18 +6,13 @@ use crate::{
     config::ConfigContext,
     offsets,
     sdk::{
-        entity::{
+        data_types::{vector::{Vector2D, Vector3D}, view_matrix::ViewMatrix4x4}, entity::{
             base_entity::{CBaseEntity, CBaseEntitySchema},
             cs_player_controller::CCSPlayerController,
             cs_player_pawn::CCSPlayerPawn,
-            data_types::{
-                vector::{Vector2D, Vector3D},
-                view_matrix::ViewMatrix4x4,
-            },
-        },
-        interfaces::{
+        }, interfaces::{
             engine_client::WrappedCEngineClient, game_entity_system::WrappedCGameEntitySystem,
-        },
+        }
     },
     utils::module::Module,
 };

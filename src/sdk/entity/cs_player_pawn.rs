@@ -1,8 +1,8 @@
 use std::ffi::c_void;
 
-use crate::offsets;
+use crate::{offsets, sdk::data_types::vector::Vector3D};
 
-use super::{base_entity::CBaseEntitySchema, data_types::vector::Vector3D};
+use super::base_entity::CBaseEntitySchema;
 
 pub struct CCSPlayerPawn(pub *mut c_void);
 
